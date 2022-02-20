@@ -20,9 +20,9 @@ import (
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/ChainSafe/log15"
-	eth "github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	klaytn "github.com/klaytn/klaytn"
+	"github.com/klaytn/klaytn/accounts/abi/bind"
+	klaycommon "github.com/klaytn/klaytn/common"
 )
 
 var BlockRetryInterval = time.Second * 5
@@ -204,12 +204,12 @@ func (l *listener) getDepositEventsForBlock(latestBlock *big.Int) error {
 }
 
 // buildQuery constructs a query for the bridgeContract by hashing sig to get the event topic
-func buildQuery(contract ethcommon.Address, sig utils.EventSig, startBlock *big.Int, endBlock *big.Int) eth.FilterQuery {
-	query := eth.FilterQuery{
+func buildQuery(contract klaycommon.Address, sig utils.EventSig, startBlock *big.Int, endBlock *big.Int) eth.FilterQuery {
+	query := klaytn.FilterQuery{
 		FromBlock: startBlock,
 		ToBlock:   endBlock,
-		Addresses: []ethcommon.Address{contract},
-		Topics: [][]ethcommon.Hash{
+		Addresses: []klaycommon.Address{contract},
+		Topics: [][]klaycommon.Hash{
 			{sig.GetTopic()},
 		},
 	}
