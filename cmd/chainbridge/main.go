@@ -196,14 +196,14 @@ func run(ctx *cli.Context) error {
 			m = metrics.NewChainMetrics(chain.Name)
 		}
 
-		if chain.Type == "ethereum" {
+		switch chain.Type {
+		case "ethereum":
 			newChain, err = ethereum.InitializeChain(chainConfig, logger, sysErr, m)
-		} else if chain.Type == "substrate" {
+		case "substrate":
 			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr, m)
-		} else if chain.Type == "klay" {
-			logger.Info("Method inside Klay is called")
+		case "klay":
 			newChain, err = klaytn.InitializeChain(chainConfig, logger, sysErr, m)
-		} else {
+		default:
 			return errors.New("unrecognized Chain Type")
 		}
 
@@ -211,7 +211,6 @@ func run(ctx *cli.Context) error {
 			return err
 		}
 		c.AddChain(newChain)
-
 	}
 
 	// Start prometheus and health server

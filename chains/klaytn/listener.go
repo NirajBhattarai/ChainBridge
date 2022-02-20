@@ -10,18 +10,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ChainSafe/ChainBridge/bindings/Bridge"
-	"github.com/ChainSafe/ChainBridge/bindings/ERC20Handler"
-	"github.com/ChainSafe/ChainBridge/bindings/ERC721Handler"
-	"github.com/ChainSafe/ChainBridge/bindings/GenericHandler"
 	"github.com/ChainSafe/ChainBridge/chains"
-	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
+	utils "github.com/ChainSafe/ChainBridge/shared/klaytn"
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/ChainSafe/log15"
 	klaytn "github.com/klaytn/klaytn"
-	"github.com/klaytn/klaytn/accounts/abi/bind"
 	klaycommon "github.com/klaytn/klaytn/common"
 )
 
@@ -30,20 +25,20 @@ var BlockRetryLimit = 5
 var ErrFatalPolling = errors.New("listener block polling failed")
 
 type listener struct {
-	cfg                    Config
-	conn                   Connection
-	router                 chains.Router
-	bridgeContract         *Bridge.Bridge // instance of bound bridge contract
-	erc20HandlerContract   *ERC20Handler.ERC20Handler
-	erc721HandlerContract  *ERC721Handler.ERC721Handler
-	genericHandlerContract *GenericHandler.GenericHandler
-	log                    log15.Logger
-	blockstore             blockstore.Blockstorer
-	stop                   <-chan int
-	sysErr                 chan<- error // Reports fatal error to core
-	latestBlock            metrics.LatestBlock
-	metrics                *metrics.ChainMetrics
-	blockConfirmations     *big.Int
+	cfg    Config
+	conn   Connection
+	router chains.Router
+	// bridgeContract         *Bridge.Bridge // instance of bound bridge contract
+	// erc20HandlerContract   *ERC20Handler.ERC20Handler
+	// erc721HandlerContract  *ERC721Handler.ERC721Handler
+	// genericHandlerContract *GenericHandler.GenericHandler
+	log                log15.Logger
+	blockstore         blockstore.Blockstorer
+	stop               <-chan int
+	sysErr             chan<- error // Reports fatal error to core
+	latestBlock        metrics.LatestBlock
+	metrics            *metrics.ChainMetrics
+	blockConfirmations *big.Int
 }
 
 // NewListener creates and returns a listener
@@ -61,13 +56,13 @@ func NewListener(conn Connection, cfg *Config, log log15.Logger, bs blockstore.B
 	}
 }
 
-// setContracts sets the listener with the appropriate contracts
-func (l *listener) setContracts(bridge *Bridge.Bridge, erc20Handler *ERC20Handler.ERC20Handler, erc721Handler *ERC721Handler.ERC721Handler, genericHandler *GenericHandler.GenericHandler) {
-	l.bridgeContract = bridge
-	l.erc20HandlerContract = erc20Handler
-	l.erc721HandlerContract = erc721Handler
-	l.genericHandlerContract = genericHandler
-}
+// // setContracts sets the listener with the appropriate contracts
+// func (l *listener) setContracts(bridge *Bridge.Bridge, erc20Handler *ERC20Handler.ERC20Handler, erc721Handler *ERC721Handler.ERC721Handler, genericHandler *GenericHandler.GenericHandler) {
+// 	l.bridgeContract = bridge
+// 	l.erc20HandlerContract = erc20Handler
+// 	l.erc721HandlerContract = erc721Handler
+// 	l.genericHandlerContract = genericHandler
+// }
 
 // sets the router
 func (l *listener) setRouter(r chains.Router) {
@@ -171,22 +166,25 @@ func (l *listener) getDepositEventsForBlock(latestBlock *big.Int) error {
 	for _, log := range logs {
 		var m msg.Message
 		destId := msg.ChainId(log.Topics[1].Big().Uint64())
-		rId := msg.ResourceIdFromSlice(log.Topics[2].Bytes())
+		// rId := msg.ResourceIdFromSlice(log.Topics[2].Bytes()) // TODO (twiny): is this required for klaytn?
 		nonce := msg.Nonce(log.Topics[3].Big().Uint64())
 
-		addr, err := l.bridgeContract.ResourceIDToHandlerAddress(&bind.CallOpts{From: l.conn.Keypair().CommonAddress()}, rId)
-		if err != nil {
-			return fmt.Errorf("failed to get handler from resource ID %x", rId)
-		}
+		kaddr := klaycommon.HexToAddress(l.conn.Keypair().Address())
 
-		if addr == l.cfg.erc20HandlerContract {
+		// TODO (twiny): is this required for klaytn?
+		// addr, err := l.bridgeContract.ResourceIDToHandlerAddress(&bind.CallOpts{From: kaddr}, rId)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to get handler from resource ID %x", rId)
+		// }
+
+		if kaddr == l.cfg.erc20HandlerContract {
 			m, err = l.handleErc20DepositedEvent(destId, nonce)
-		} else if addr == l.cfg.erc721HandlerContract {
+		} else if kaddr == l.cfg.erc721HandlerContract {
 			m, err = l.handleErc721DepositedEvent(destId, nonce)
-		} else if addr == l.cfg.genericHandlerContract {
+		} else if kaddr == l.cfg.genericHandlerContract {
 			m, err = l.handleGenericDepositedEvent(destId, nonce)
 		} else {
-			l.log.Error("event has unrecognized handler", "handler", addr.Hex())
+			l.log.Error("event has unrecognized handler", "handler", kaddr.Hex())
 			return nil
 		}
 
@@ -204,7 +202,7 @@ func (l *listener) getDepositEventsForBlock(latestBlock *big.Int) error {
 }
 
 // buildQuery constructs a query for the bridgeContract by hashing sig to get the event topic
-func buildQuery(contract klaycommon.Address, sig utils.EventSig, startBlock *big.Int, endBlock *big.Int) eth.FilterQuery {
+func buildQuery(contract klaycommon.Address, sig utils.EventSig, startBlock *big.Int, endBlock *big.Int) klaytn.FilterQuery {
 	query := klaytn.FilterQuery{
 		FromBlock: startBlock,
 		ToBlock:   endBlock,

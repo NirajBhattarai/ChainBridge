@@ -8,18 +8,21 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ChainSafe/ChainBridge/connections/ethereum/egs"
-	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
+	utils "github.com/ChainSafe/ChainBridge/shared/klaytn"
+
 	"github.com/ChainSafe/chainbridge-utils/core"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/klaytn/klaytn/common"
 )
 
-const DefaultGasLimit = 6721975
-const DefaultGasPrice = 20000000000
-const DefaultMinGasPrice = 0
-const DefaultBlockConfirmations = 10
-const DefaultGasMultiplier = 1
+// const
+const (
+	DefaultGasLimit           = 6721975
+	DefaultGasPrice           = 20000000000
+	DefaultMinGasPrice        = 0
+	DefaultBlockConfirmations = 10
+	DefaultGasMultiplier      = 1
+)
 
 // Chain specific options
 var (
@@ -34,8 +37,10 @@ var (
 	HttpOpt               = "http"
 	StartBlockOpt         = "startBlock"
 	BlockConfirmationsOpt = "blockConfirmations"
-	EGSApiKey             = "egsApiKey"
-	EGSSpeed              = "egsSpeed"
+	// TODO (twiny): are those needed
+	// EGSApiKey             = "egsApiKey"
+	// EGSSpeed              = "egsSpeed"
+	//
 )
 
 // Config encapsulates all necessary parameters in ethereum compatible forms
@@ -64,7 +69,6 @@ type Config struct {
 
 // parseChainConfig uses a core.ChainConfig to construct a corresponding Config
 func parseChainConfig(chainCfg *core.ChainConfig) (*Config, error) {
-
 	config := &Config{
 		name:                   chainCfg.Name,
 		id:                     chainCfg.Id,
@@ -184,19 +188,19 @@ func parseChainConfig(chainCfg *core.ChainConfig) (*Config, error) {
 		delete(chainCfg.Opts, BlockConfirmationsOpt)
 	}
 
-	if gsnApiKey, ok := chainCfg.Opts[EGSApiKey]; ok && gsnApiKey != "" {
-		config.egsApiKey = gsnApiKey
-		delete(chainCfg.Opts, EGSApiKey)
-	}
+	// if gsnApiKey, ok := chainCfg.Opts[EGSApiKey]; ok && gsnApiKey != "" {
+	// 	config.egsApiKey = gsnApiKey
+	// 	delete(chainCfg.Opts, EGSApiKey)
+	// }
 
-	if speed, ok := chainCfg.Opts[EGSSpeed]; ok && speed == egs.Average || speed == egs.Fast || speed == egs.Fastest {
-		config.egsSpeed = speed
-		delete(chainCfg.Opts, EGSSpeed)
-	} else {
-		// Default to "fast"
-		config.egsSpeed = egs.Fast
-		delete(chainCfg.Opts, EGSSpeed)
-	}
+	// if speed, ok := chainCfg.Opts[EGSSpeed]; ok && speed == egs.Average || speed == egs.Fast || speed == egs.Fastest {
+	// 	config.egsSpeed = speed
+	// 	delete(chainCfg.Opts, EGSSpeed)
+	// } else {
+	// 	// Default to "fast"
+	// 	config.egsSpeed = egs.Fast
+	// 	delete(chainCfg.Opts, EGSSpeed)
+	// }
 
 	if len(chainCfg.Opts) != 0 {
 		return nil, fmt.Errorf("unknown Opts Encountered: %#v", chainCfg.Opts)

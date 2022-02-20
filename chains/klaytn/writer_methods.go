@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"time"
 
-	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
+	utils "github.com/ChainSafe/ChainBridge/shared/klaytn"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	log "github.com/ChainSafe/log15"
 )
@@ -30,42 +30,46 @@ var ErrFatalQuery = errors.New("query of chain state failed")
 
 // proposalIsComplete returns true if the proposal state is either Passed, Transferred or Cancelled
 func (w *writer) proposalIsComplete(srcId msg.ChainId, nonce msg.Nonce, dataHash [32]byte) bool {
-	prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
-	if err != nil {
-		w.log.Error("Failed to check proposal existence", "err", err)
-		return false
-	}
-	return prop.Status == PassedStatus || prop.Status == TransferredStatus || prop.Status == CancelledStatus
+	// prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
+	// if err != nil {
+	// 	w.log.Error("Failed to check proposal existence", "err", err)
+	// 	return false
+	// }
+	// return prop.Status == PassedStatus || prop.Status == TransferredStatus || prop.Status == CancelledStatus
+	return false
 }
 
 // proposalIsComplete returns true if the proposal state is Transferred or Cancelled
 func (w *writer) proposalIsFinalized(srcId msg.ChainId, nonce msg.Nonce, dataHash [32]byte) bool {
-	prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
-	if err != nil {
-		w.log.Error("Failed to check proposal existence", "err", err)
-		return false
-	}
-	return prop.Status == TransferredStatus || prop.Status == CancelledStatus // Transferred (3)
+	// prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
+	// if err != nil {
+	// 	w.log.Error("Failed to check proposal existence", "err", err)
+	// 	return false
+	// }
+	// return prop.Status == TransferredStatus || prop.Status == CancelledStatus // Transferred (3)
+	return false
 }
 
 func (w *writer) proposalIsPassed(srcId msg.ChainId, nonce msg.Nonce, dataHash [32]byte) bool {
-	prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
-	if err != nil {
-		w.log.Error("Failed to check proposal existence", "err", err)
-		return false
-	}
-	return prop.Status == PassedStatus
+	// prop, err := w.bridgeContract.GetProposal(w.conn.CallOpts(), uint8(srcId), uint64(nonce), dataHash)
+	// if err != nil {
+	// 	w.log.Error("Failed to check proposal existence", "err", err)
+	// 	return false
+	// }
+	// return prop.Status == PassedStatus
+	return false
 }
 
 // hasVoted checks if this relayer has already voted
 func (w *writer) hasVoted(srcId msg.ChainId, nonce msg.Nonce, dataHash [32]byte) bool {
-	hasVoted, err := w.bridgeContract.HasVotedOnProposal(w.conn.CallOpts(), utils.IDAndNonce(srcId, nonce), dataHash, w.conn.Opts().From)
-	if err != nil {
-		w.log.Error("Failed to check proposal existence", "err", err)
-		return false
-	}
+	// hasVoted, err := w.bridgeContract.HasVotedOnProposal(w.conn.CallOpts(), utils.IDAndNonce(srcId, nonce), dataHash, w.conn.Opts().From)
+	// if err != nil {
+	// 	w.log.Error("Failed to check proposal existence", "err", err)
+	// 	return false
+	// }
 
-	return hasVoted
+	// return hasVoted
+	return false
 }
 
 func (w *writer) shouldVote(m msg.Message, dataHash [32]byte) bool {
@@ -244,102 +248,102 @@ func (w *writer) watchThenExecute(m msg.Message, data []byte, dataHash [32]byte,
 // voteProposal submits a vote proposal
 // a vote proposal will try to be submitted up to the TxRetryLimit times
 func (w *writer) voteProposal(m msg.Message, dataHash [32]byte) {
-	for i := 0; i < TxRetryLimit; i++ {
-		select {
-		case <-w.stop:
-			return
-		default:
-			err := w.conn.LockAndUpdateOpts()
-			if err != nil {
-				w.log.Error("Failed to update tx opts", "err", err)
-				continue
-			}
-			// These store the gas limit and price before a transaction is sent for logging in case of a failure
-			// This declaration is necessary as tx will be nil in the case of an error when sending VoteProposal()
-			// We must also declare variables instead of using w.conn.Opts() directly as the opts are currently locked
-			// here but for all the logging after line 272 the w.conn.Opts() is unlocked and could be changed by another process
-			gasLimit := w.conn.Opts().GasLimit
-			gasPrice := w.conn.Opts().GasPrice
+	// for i := 0; i < TxRetryLimit; i++ {
+	// 	select {
+	// 	case <-w.stop:
+	// 		return
+	// 	default:
+	// 		err := w.conn.LockAndUpdateOpts()
+	// 		if err != nil {
+	// 			w.log.Error("Failed to update tx opts", "err", err)
+	// 			continue
+	// 		}
+	// 		// These store the gas limit and price before a transaction is sent for logging in case of a failure
+	// 		// This declaration is necessary as tx will be nil in the case of an error when sending VoteProposal()
+	// 		// We must also declare variables instead of using w.conn.Opts() directly as the opts are currently locked
+	// 		// here but for all the logging after line 272 the w.conn.Opts() is unlocked and could be changed by another process
+	// 		gasLimit := w.conn.Opts().GasLimit
+	// 		gasPrice := w.conn.Opts().GasPrice
 
-			tx, err := w.bridgeContract.VoteProposal(
-				w.conn.Opts(),
-				uint8(m.Source),
-				uint64(m.DepositNonce),
-				m.ResourceId,
-				dataHash,
-			)
-			w.conn.UnlockOpts()
+	// 		tx, err := w.bridgeContract.VoteProposal(
+	// 			w.conn.Opts(),
+	// 			uint8(m.Source),
+	// 			uint64(m.DepositNonce),
+	// 			m.ResourceId,
+	// 			dataHash,
+	// 		)
+	// 		w.conn.UnlockOpts()
 
-			if err == nil {
-				w.log.Info("Submitted proposal vote", "tx", tx.Hash(), "src", m.Source, "depositNonce", m.DepositNonce, "gasPrice", tx.GasPrice().String())
-				if w.metrics != nil {
-					w.metrics.VotesSubmitted.Inc()
-				}
-				return
-			} else if err.Error() == ErrNonceTooLow.Error() || err.Error() == ErrTxUnderpriced.Error() {
-				w.log.Debug("Nonce too low, will retry")
-				time.Sleep(TxRetryInterval)
-			} else {
-				w.log.Warn("Voting failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce, "gasLimit", gasLimit, "gasPrice", gasPrice, "err", err)
-				time.Sleep(TxRetryInterval)
-			}
+	// 		if err == nil {
+	// 			w.log.Info("Submitted proposal vote", "tx", tx.Hash(), "src", m.Source, "depositNonce", m.DepositNonce, "gasPrice", tx.GasPrice().String())
+	// 			if w.metrics != nil {
+	// 				w.metrics.VotesSubmitted.Inc()
+	// 			}
+	// 			return
+	// 		} else if err.Error() == ErrNonceTooLow.Error() || err.Error() == ErrTxUnderpriced.Error() {
+	// 			w.log.Debug("Nonce too low, will retry")
+	// 			time.Sleep(TxRetryInterval)
+	// 		} else {
+	// 			w.log.Warn("Voting failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce, "gasLimit", gasLimit, "gasPrice", gasPrice, "err", err)
+	// 			time.Sleep(TxRetryInterval)
+	// 		}
 
-			// Verify proposal is still open for voting, otherwise no need to retry
-			if w.proposalIsComplete(m.Source, m.DepositNonce, dataHash) {
-				w.log.Info("Proposal voting complete on chain", "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce)
-				return
-			}
-		}
-	}
-	w.log.Error("Submission of Vote transaction failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce)
-	w.sysErr <- ErrFatalTx
+	// 		// Verify proposal is still open for voting, otherwise no need to retry
+	// 		if w.proposalIsComplete(m.Source, m.DepositNonce, dataHash) {
+	// 			w.log.Info("Proposal voting complete on chain", "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce)
+	// 			return
+	// 		}
+	// 	}
+	// }
+	// w.log.Error("Submission of Vote transaction failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce)
+	// w.sysErr <- ErrFatalTx
 }
 
 // executeProposal executes the proposal
 func (w *writer) executeProposal(m msg.Message, data []byte, dataHash [32]byte) {
-	for i := 0; i < TxRetryLimit; i++ {
-		select {
-		case <-w.stop:
-			return
-		default:
-			err := w.conn.LockAndUpdateOpts()
-			if err != nil {
-				w.log.Error("Failed to update nonce", "err", err)
-				return
-			}
-			// These store the gas limit and price before a transaction is sent for logging in case of a failure
-			// This is necessary as tx will be nil in the case of an error when sending VoteProposal()
-			gasLimit := w.conn.Opts().GasLimit
-			gasPrice := w.conn.Opts().GasPrice
+	// for i := 0; i < TxRetryLimit; i++ {
+	// 	select {
+	// 	case <-w.stop:
+	// 		return
+	// 	default:
+	// 		err := w.conn.LockAndUpdateOpts()
+	// 		if err != nil {
+	// 			w.log.Error("Failed to update nonce", "err", err)
+	// 			return
+	// 		}
+	// 		// These store the gas limit and price before a transaction is sent for logging in case of a failure
+	// 		// This is necessary as tx will be nil in the case of an error when sending VoteProposal()
+	// 		gasLimit := w.conn.Opts().GasLimit
+	// 		gasPrice := w.conn.Opts().GasPrice
 
-			tx, err := w.bridgeContract.ExecuteProposal(
-				w.conn.Opts(),
-				uint8(m.Source),
-				uint64(m.DepositNonce),
-				data,
-				m.ResourceId,
-			)
-			w.conn.UnlockOpts()
+	// 		tx, err := w.bridgeContract.ExecuteProposal(
+	// 			w.conn.Opts(),
+	// 			uint8(m.Source),
+	// 			uint64(m.DepositNonce),
+	// 			data,
+	// 			m.ResourceId,
+	// 		)
+	// 		w.conn.UnlockOpts()
 
-			if err == nil {
-				w.log.Info("Submitted proposal execution", "tx", tx.Hash(), "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce, "gasPrice", tx.GasPrice().String())
-				return
-			} else if err.Error() == ErrNonceTooLow.Error() || err.Error() == ErrTxUnderpriced.Error() {
-				w.log.Error("Nonce too low, will retry")
-				time.Sleep(TxRetryInterval)
-			} else {
-				w.log.Warn("Execution failed, proposal may already be complete", "gasLimit", gasLimit, "gasPrice", gasPrice, "err", err)
-				time.Sleep(TxRetryInterval)
-			}
+	// 		if err == nil {
+	// 			w.log.Info("Submitted proposal execution", "tx", tx.Hash(), "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce, "gasPrice", tx.GasPrice().String())
+	// 			return
+	// 		} else if err.Error() == ErrNonceTooLow.Error() || err.Error() == ErrTxUnderpriced.Error() {
+	// 			w.log.Error("Nonce too low, will retry")
+	// 			time.Sleep(TxRetryInterval)
+	// 		} else {
+	// 			w.log.Warn("Execution failed, proposal may already be complete", "gasLimit", gasLimit, "gasPrice", gasPrice, "err", err)
+	// 			time.Sleep(TxRetryInterval)
+	// 		}
 
-			// Verify proposal is still open for execution, tx will fail if we aren't the first to execute,
-			// but there is no need to retry
-			if w.proposalIsFinalized(m.Source, m.DepositNonce, dataHash) {
-				w.log.Info("Proposal finalized on chain", "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce)
-				return
-			}
-		}
-	}
-	w.log.Error("Submission of Execute transaction failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce)
-	w.sysErr <- ErrFatalTx
+	// 		// Verify proposal is still open for execution, tx will fail if we aren't the first to execute,
+	// 		// but there is no need to retry
+	// 		if w.proposalIsFinalized(m.Source, m.DepositNonce, dataHash) {
+	// 			w.log.Info("Proposal finalized on chain", "src", m.Source, "dst", m.Destination, "nonce", m.DepositNonce)
+	// 			return
+	// 		}
+	// 	}
+	// }
+	// w.log.Error("Submission of Execute transaction failed", "source", m.Source, "dest", m.Destination, "depositNonce", m.DepositNonce)
+	// w.sysErr <- ErrFatalTx
 }
