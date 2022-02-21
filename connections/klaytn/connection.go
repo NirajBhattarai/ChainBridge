@@ -1,7 +1,7 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: LGPL-3.0-only
 
-package ethereum
+package klaytn
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"github.com/ChainSafe/ChainBridge/connections/ethereum/egs"
 	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/ChainSafe/log15"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/klaytn/klaytn/accounts/abi/bind"
+	klaycommon "github.com/klaytn/klaytn/common"
 
 	//ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
@@ -274,7 +274,7 @@ func (c *Connection) LatestBlock() (*big.Int, error) {
 }
 
 // EnsureHasBytecode asserts if contract code exists at the specified address
-func (c *Connection) EnsureHasBytecode(addr ethcommon.Address) error {
+func (c *Connection) EnsureHasBytecode(addr klaycommon.Address) error {
 	// code, err := c.conn.CodeAt(context.Background(), addr, nil)
 	// if err != nil {
 	// 	return err

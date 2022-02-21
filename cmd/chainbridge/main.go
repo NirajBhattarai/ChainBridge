@@ -17,6 +17,8 @@ import (
 
 	"github.com/ChainSafe/ChainBridge/chains/ethereum"
 	"github.com/ChainSafe/ChainBridge/chains/klaytn"
+
+	//"github.com/ChainSafe/ChainBridge/chains/klaytn"
 	"github.com/ChainSafe/ChainBridge/chains/substrate"
 	"github.com/ChainSafe/ChainBridge/config"
 	"github.com/ChainSafe/chainbridge-utils/core"
