@@ -1,13 +1,14 @@
 package klaytn
 
 import (
+	"fmt"
 	"math/big"
 
 	connection "github.com/ChainSafe/ChainBridge/connections/klaytn"
+	"github.com/ChainSafe/ChainBridge/pkg/klaytn/secp256k1"
 	utils "github.com/ChainSafe/ChainBridge/shared/klaytn"
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	"github.com/ChainSafe/chainbridge-utils/core"
-	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/ChainSafe/chainbridge-utils/keystore"
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/chainbridge-utils/msg"
@@ -76,7 +77,10 @@ func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr cha
 	if err != nil {
 		return nil, err
 	}
-	kp, _ := kpI.(*secp256k1.Keypair)
+	kp, ok := kpI.(*secp256k1.Keypair)
+	if !ok {
+		return nil, fmt.Errorf("keypair type is not secp256k1")
+	}
 
 	bs, err := setupBlockstore(cfg, kp)
 	if err != nil {

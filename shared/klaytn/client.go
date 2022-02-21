@@ -8,8 +8,7 @@ import (
 	"sync"
 	"time"
 
-	// "github.com/ChainSafe/ChainBridge/chains/klaytn"
-	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
+	"github.com/ChainSafe/ChainBridge/pkg/klaytn/secp256k1"
 	"github.com/klaytn/klaytn"
 	"github.com/klaytn/klaytn/accounts/abi/bind"
 	"github.com/klaytn/klaytn/blockchain/types"
