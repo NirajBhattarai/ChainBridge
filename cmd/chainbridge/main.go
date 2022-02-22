@@ -16,9 +16,8 @@ import (
 	"strconv"
 
 	"github.com/ChainSafe/ChainBridge/chains/ethereum"
-	"github.com/ChainSafe/ChainBridge/chains/klaytn"
+	"github.com/ChainSafe/ChainBridge/chains/klay"
 
-	//"github.com/ChainSafe/ChainBridge/chains/klaytn"
 	"github.com/ChainSafe/ChainBridge/chains/substrate"
 	"github.com/ChainSafe/ChainBridge/config"
 	"github.com/ChainSafe/chainbridge-utils/core"
@@ -204,7 +203,7 @@ func run(ctx *cli.Context) error {
 			newChain, err = substrate.InitializeChain(chainConfig, logger, sysErr, m)
 		} else if chain.Type == "klay" {
 			logger.Info("Method inside Klay is called")
-			newChain, err = klaytn.InitializeChain(chainConfig, logger, sysErr, m)
+			newChain, err = klay.InitializeChain(chainConfig, logger, sysErr, m)
 		} else {
 			return errors.New("unrecognized Chain Type")
 		}

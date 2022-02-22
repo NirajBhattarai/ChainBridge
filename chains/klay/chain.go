@@ -18,10 +18,9 @@ Writer
 
 The writer recieves the message and creates a proposals on-chain. Once a proposal is made, the writer then watches for a finalization event and will attempt to execute the proposal if a matching event occurs. The writer skips over any proposals it has already seen.
 */
-package klaytn
+package klay
 
 import (
-	// "math/big"
 
 	// "github.com/ChainSafe/chainbridge-utils/blockstore"
 	// "github.com/ChainSafe/chainbridge-utils/core"
@@ -37,6 +36,20 @@ import (
 
 	// //c"github.com/ethereum/go-ethereum/common"
 
+	// "math/big"
+
+	// "github.com/ChainSafe/chainbridge-utils/blockstore"
+	// "github.com/ChainSafe/chainbridge-utils/core"
+	// "github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
+	// metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
+	// "github.com/ChainSafe/chainbridge-utils/msg"
+	// "github.com/ChainSafe/log15"
+	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
+	// "github.com/ethereum/go-ethereum/ethclient"
+
+	// "github.com/ethereum/go-ethereum/common"
+	//"github.com/klaytn/klaytn/client"
+
 	"math/big"
 
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
@@ -46,10 +59,10 @@ import (
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/ChainSafe/log15"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/ethclient"
-
 	"github.com/ethereum/go-ethereum/common"
-	//"github.com/klaytn/klaytn/client"
+
+	//"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/klaytn/klaytn/client"
 )
 
 var _ core.Chain = nil //&Chain{}
@@ -63,7 +76,7 @@ type Connection interface {
 	CallOpts() *bind.CallOpts
 	LockAndUpdateOpts() error
 	UnlockOpts()
-	Client() *ethclient.Client
+	Client() *client.Client
 	EnsureHasBytecode(address common.Address) error
 	LatestBlock() (*big.Int, error)
 	WaitForBlock(block *big.Int, delay *big.Int) error
@@ -97,6 +110,7 @@ func setupBlockstore(cfg *Config, kp *secp256k1.Keypair) (*blockstore.Blockstore
 	// 	}
 	// }
 
+	//return bs, nil
 	return nil, nil
 }
 
@@ -179,7 +193,7 @@ func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr cha
 	// 	cfg.startBlock = curr
 	// }
 
-	//listener := NewListener(conn, cfg, logger, bs, stop, sysErr, m)
+	// listener := NewListener(conn, cfg, logger, bs, stop, sysErr, m)
 	// listener.setContracts(bridgeContract, erc20HandlerContract, erc721HandlerContract, genericHandlerContract)
 
 	// writer := NewWriter(conn, cfg, logger, stop, sysErr, m)
@@ -201,17 +215,17 @@ func (c *Chain) SetRouter(r *core.Router) {
 }
 
 func (c *Chain) Start() error {
-	err := c.listener.start()
-	if err != nil {
-		return err
-	}
+	// err := c.listener.start()
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = c.writer.start()
-	if err != nil {
-		return err
-	}
+	// err = c.writer.start()
+	// if err != nil {
+	// 	return err
+	// }
 
-	c.writer.log.Debug("Successfully started chain")
+	// c.writer.log.Debug("Successfully started chain")
 	return nil
 }
 

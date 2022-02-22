@@ -12,18 +12,13 @@ import (
 	"time"
 
 	"github.com/ChainSafe/ChainBridge/connections/ethereum/egs"
-	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/ChainSafe/log15"
+	"github.com/NirajBhattarai/klay-utils/crypto/secp256k1"
 	"github.com/klaytn/klaytn/accounts/abi/bind"
 	klaycommon "github.com/klaytn/klaytn/common"
 
-	//ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	klaycrypto "github.com/klaytn/klaytn/crypto"
 
-	ethcrypto "github.com/klaytn/klaytn/crypto"
-
-	//"github.com/ethereum/go-ethereum/ethclient"
-
-	//"github.com/ethereum/go-ethereum/rpc"
 	"github.com/klaytn/klaytn/client"
 	"github.com/klaytn/klaytn/networks/rpc"
 )
@@ -98,19 +93,19 @@ func (c *Connection) Connect() error {
 // newTransactOpts builds the TransactOpts for the connection's keypair.
 func (c *Connection) newTransactOpts(value, gasLimit, gasPrice *big.Int) (*bind.TransactOpts, uint64, error) {
 	privateKey := c.kp.PrivateKey()
-	address := ethcrypto.PubkeyToAddress(privateKey.PublicKey)
+	address := klaycrypto.PubkeyToAddress(privateKey.PublicKey)
 
 	nonce, err := c.conn.PendingNonceAt(context.Background(), address)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	id, err := c.conn.ChainID(context.Background())
-	if err != nil {
-		return nil, 0, err
-	}
+	// id, err := c.conn.ChainID(context.Background())
+	// if err != nil {
+	// 	return nil, 0, err
+	// }
 
-	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, id)
+	auth, err := bind.NewKeyedTransactor(privateKey)
 	if err != nil {
 		return nil, 0, err
 	}
