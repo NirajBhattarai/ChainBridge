@@ -50,11 +50,16 @@ import (
 	// "github.com/ethereum/go-ethereum/common"
 	//"github.com/klaytn/klaytn/client"
 
+	"fmt"
 	"math/big"
 
+	"github.com/ChainSafe/ChainBridge/bindings/GenericHandler"
+	connection "github.com/ChainSafe/ChainBridge/connections/klaytn"
+	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	"github.com/ChainSafe/chainbridge-utils/core"
 	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
+	"github.com/ChainSafe/chainbridge-utils/keystore"
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/ChainSafe/log15"
@@ -63,11 +68,12 @@ import (
 
 	//"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/klaytn/klaytn/client"
+	"github.com/klaytn/klaytn/contracts/bridge"
 )
 
-var _ core.Chain = nil //&Chain{}
+var _ core.Chain = &Chain{}
 
-var _ Connection = nil //&connection.Connection{}
+var _ Connection = &connection.Connection{}
 
 type Connection interface {
 	Connect() error
@@ -94,104 +100,111 @@ type Chain struct {
 // checkBlockstore queries the blockstore for the latest known block. If the latest block is
 // greater than cfg.startBlock, then cfg.startBlock is replaced with the latest known block.
 func setupBlockstore(cfg *Config, kp *secp256k1.Keypair) (*blockstore.Blockstore, error) {
-	// bs, err := blockstore.NewBlockstore(cfg.blockstorePath, cfg.id, kp.Address())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	bs, err := blockstore.NewBlockstore(cfg.blockstorePath, cfg.id, kp.Address())
+	if err != nil {
+		return nil, err
+	}
 
-	// if !cfg.freshStart {
-	// 	latestBlock, err := bs.TryLoadLatestBlock()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+	if !cfg.freshStart {
+		latestBlock, err := bs.TryLoadLatestBlock()
+		if err != nil {
+			return nil, err
+		}
 
-	// 	if latestBlock.Cmp(cfg.startBlock) == 1 {
-	// 		cfg.startBlock = latestBlock
-	// 	}
-	// }
+		if latestBlock.Cmp(cfg.startBlock) == 1 {
+			cfg.startBlock = latestBlock
+		}
+	}
 
-	//return bs, nil
-	return nil, nil
+	return bs, nil
+	//return nil, nil
 }
 
 func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr chan<- error, m *metrics.ChainMetrics) (*Chain, error) {
-	// cfg, err := parseChainConfig(chainCfg)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	fmt.Print("====================================================")
+	cfg, err := parseChainConfig(chainCfg)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Print(cfg)
 
-	// kpI, err := keystore.KeypairFromAddress(cfg.from, keystore.EthChain, cfg.keystorePath, chainCfg.Insecure)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// kp, _ := kpI.(*secp256k1.Keypair)
+	kpI, err := keystore.KeypairFromAddress(cfg.from, keystore.EthChain, cfg.keystorePath, chainCfg.Insecure)
+	if err != nil {
+		return nil, err
+	}
+	kp, _ := kpI.(*secp256k1.Keypair)
 
-	// bs, err := setupBlockstore(cfg, kp)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	bs, err := setupBlockstore(cfg, kp)
+	if err != nil {
+		return nil, err
+	}
 
-	// stop := make(chan int)
-	// conn := connection.NewConnection(cfg.endpoint, cfg.http, kp, logger, cfg.gasLimit, cfg.maxGasPrice, cfg.minGasPrice, cfg.gasMultiplier, cfg.egsApiKey, cfg.egsSpeed)
-	// err = conn.Connect()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// err = conn.EnsureHasBytecode(cfg.bridgeContract)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	fmt.Print(bs)
 
-	// if cfg.erc20HandlerContract != utils.ZeroAddress {
-	// 	err = conn.EnsureHasBytecode(cfg.erc20HandlerContract)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
+	stop := make(chan int)
+	conn := connection.NewConnection(cfg.endpoint, cfg.http, kp, logger, cfg.gasLimit, cfg.maxGasPrice, cfg.minGasPrice, cfg.gasMultiplier, cfg.egsApiKey, cfg.egsSpeed)
+	err = conn.Connect()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Print(stop)
+	err = conn.EnsureHasBytecode(cfg.bridgeContract)
+	if err != nil {
+		return nil, err
+	}
 
-	// if cfg.genericHandlerContract != utils.ZeroAddress {
-	// 	err = conn.EnsureHasBytecode(cfg.genericHandlerContract)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
+	if cfg.erc20HandlerContract != utils.ZeroAddress {
+		err = conn.EnsureHasBytecode(cfg.erc20HandlerContract)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	// bridgeContract, err := bridge.NewBridge(cfg.bridgeContract, conn.Client())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if cfg.genericHandlerContract != utils.ZeroAddress {
+		err = conn.EnsureHasBytecode(cfg.genericHandlerContract)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	// chainId, err := bridgeContract.ChainID(conn.CallOpts())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	bridgeContract, err := bridge.NewBridge(cfg.bridgeContract, conn.Client())
+	if err != nil {
+		return nil, err
+	}
 
-	// if chainId != uint8(chainCfg.Id) {
-	// 	return nil, fmt.Errorf("chainId (%d) and configuration chainId (%d) do not match", chainId, chainCfg.Id)
-	// }
+	chainId, err := bridgeContract.ChainID(conn.CallOpts())
+	if err != nil {
+		return nil, err
+	}
 
-	// erc20HandlerContract, err := erc20Handler.NewERC20Handler(cfg.erc20HandlerContract, conn.Client())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if chainId != uint8(chainCfg.Id) {
+		return nil, fmt.Errorf("chainId (%d) and configuration chainId (%d) do not match", chainId, chainCfg.Id)
+	}
 
-	// erc721HandlerContract, err := erc721Handler.NewERC721Handler(cfg.erc721HandlerContract, conn.Client())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	erc20HandlerContract, err := erc20Handler.NewERC20Handler(cfg.erc20HandlerContract, conn.Client())
+	if err != nil {
+		return nil, err
+	}
 
-	// genericHandlerContract, err := GenericHandler.NewGenericHandler(cfg.genericHandlerContract, conn.Client())
-	// if err != nil {
-	// 	return nil, err
-	// }
+	erc721HandlerContract, err := erc721Handler.NewERC721Handler(cfg.erc721HandlerContract, conn.Client())
+	if err != nil {
+		return nil, err
+	}
 
-	// if chainCfg.LatestBlock {
-	// 	curr, err := conn.LatestBlock()
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	cfg.startBlock = curr
-	// }
+	genericHandlerContract, err := GenericHandler.NewGenericHandler(cfg.genericHandlerContract, conn.Client())
+	if err != nil {
+		return nil, err
+	}
+
+	if chainCfg.LatestBlock {
+		curr, err := conn.LatestBlock()
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("====================================")
+		fmt.Print(curr)
+		cfg.startBlock = curr
+	}
 
 	// listener := NewListener(conn, cfg, logger, bs, stop, sysErr, m)
 	// listener.setContracts(bridgeContract, erc20HandlerContract, erc721HandlerContract, genericHandlerContract)

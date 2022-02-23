@@ -12,10 +12,13 @@ import (
 	"time"
 
 	"github.com/ChainSafe/ChainBridge/connections/ethereum/egs"
+	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/ChainSafe/log15"
-	"github.com/NirajBhattarai/klay-utils/crypto/secp256k1"
-	"github.com/klaytn/klaytn/accounts/abi/bind"
-	klaycommon "github.com/klaytn/klaytn/common"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
+	//klaycommon "github.com/klaytn/klaytn/common"
+
+	klaycommon "github.com/ethereum/go-ethereum/common"
 
 	klaycrypto "github.com/klaytn/klaytn/crypto"
 
@@ -105,10 +108,7 @@ func (c *Connection) newTransactOpts(value, gasLimit, gasPrice *big.Int) (*bind.
 	// 	return nil, 0, err
 	// }
 
-	auth, err := bind.NewKeyedTransactor(privateKey)
-	if err != nil {
-		return nil, 0, err
-	}
+	auth := bind.NewKeyedTransactor(privateKey)
 
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = value

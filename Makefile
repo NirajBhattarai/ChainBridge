@@ -1,5 +1,5 @@
 PROJECTNAME=$(shell basename "$(PWD)")
-VERSION=-ldflags="-X main.Version=$(shell git describe --tags)"
+VERSION=-ldflags="-extldflags "-Wl,--allow-multiple-definition""
 SOL_DIR=./solidity
 
 CENT_EMITTER_ADDR?=0x1

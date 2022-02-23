@@ -155,7 +155,7 @@ func run(ctx *cli.Context) error {
 		return err
 	}
 
-	log.Debug("Config on initialization...", "config", *cfg)
+	//log.Debug("Config on initialization...", "config", *cfg)
 
 	// Check for test key flag
 	var ks string
