@@ -6,8 +6,8 @@ package klay
 import (
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/klaytn/klaytn/common"
+	"github.com/klaytn/klaytn/common/math"
 )
 
 // constructErc20ProposalData returns the bytes to construct a proposal suitable for Erc20
