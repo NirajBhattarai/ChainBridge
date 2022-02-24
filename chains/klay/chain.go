@@ -39,8 +39,6 @@ import (
 	"github.com/klaytn/klaytn/accounts/abi/bind"
 	"github.com/klaytn/klaytn/common"
 
-	//"github.com/klaytn/klaytn/contracts/bridge"
-
 	"github.com/klaytn/klaytn/client"
 )
 

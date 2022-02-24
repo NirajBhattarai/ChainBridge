@@ -16,8 +16,6 @@ import (
 	"github.com/ChainSafe/log15"
 	"github.com/klaytn/klaytn/accounts/abi/bind"
 
-	//klaycommon "github.com/klaytn/klaytn/common"
-
 	klaycommon "github.com/klaytn/klaytn/common"
 
 	klaycrypto "github.com/klaytn/klaytn/crypto"
@@ -236,21 +234,21 @@ func (c *Connection) LockAndUpdateOpts() error {
 	// 	// Both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) cannot be specified: https://github.com/klaytn/klaytn/blob/95bbd46eabc5d95d9fb2108ec232dd62df2f44ab/accounts/abi/bind/base.go#L254
 	// 	c.opts.GasPrice = nil
 	// } else {
-	// 	var gasPrice *big.Int
-	// 	gasPrice, err = c.SafeEstimateGas(context.TODO())
-	// 	if err != nil {
-	// 		c.UnlockOpts()
-	// 		return err
-	// 	}
-	// 	c.opts.GasPrice = gasPrice
-	// }
+	var gasPrice *big.Int
+	gasPrice, err = c.SafeEstimateGas(context.TODO())
+	if err != nil {
+		c.UnlockOpts()
+		return err
+	}
+	c.opts.GasPrice = gasPrice
+	//}
 
-	// nonce, err := c.conn.PendingNonceAt(context.Background(), c.opts.From)
-	// if err != nil {
-	// 	c.optsLock.Unlock()
-	// 	return err
-	// }
-	// c.opts.Nonce.SetUint64(nonce)
+	nonce, err := c.conn.PendingNonceAt(context.Background(), c.opts.From)
+	if err != nil {
+		c.optsLock.Unlock()
+		return err
+	}
+	c.opts.Nonce.SetUint64(nonce)
 	return nil
 }
 
@@ -270,14 +268,14 @@ func (c *Connection) LatestBlock() (*big.Int, error) {
 
 // EnsureHasBytecode asserts if contract code exists at the specified address
 func (c *Connection) EnsureHasBytecode(addr klaycommon.Address) error {
-	// code, err := c.conn.CodeAt(context.Background(), addr, nil)
-	// if err != nil {
-	// 	return err
-	// }
+	code, err := c.conn.CodeAt(context.Background(), addr, nil)
+	if err != nil {
+		return err
+	}
 
-	// if len(code) == 0 {
-	// 	return fmt.Errorf("no bytecode found at %s", addr.Hex())
-	// }
+	if len(code) == 0 {
+		return fmt.Errorf("no bytecode found at %s", addr.Hex())
+	}
 	return nil
 }
 
