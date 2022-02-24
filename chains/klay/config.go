@@ -12,7 +12,7 @@ import (
 	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
 	"github.com/ChainSafe/chainbridge-utils/core"
 	"github.com/ChainSafe/chainbridge-utils/msg"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/klaytn/klaytn/common"
 )
 
 const DefaultGasLimit = 6721975
@@ -73,10 +73,10 @@ func parseChainConfig(chainCfg *core.ChainConfig) (*Config, error) {
 		keystorePath:           chainCfg.KeystorePath,
 		blockstorePath:         chainCfg.BlockstorePath,
 		freshStart:             chainCfg.FreshStart,
-		bridgeContract:         utils.ZeroAddress,
-		erc20HandlerContract:   utils.ZeroAddress,
-		erc721HandlerContract:  utils.ZeroAddress,
-		genericHandlerContract: utils.ZeroAddress,
+		bridgeContract:         common.HexToAddress("0x0000000000000000000000000000000000000000"),
+		erc20HandlerContract:   common.HexToAddress("0x0000000000000000000000000000000000000000"),
+		erc721HandlerContract:  common.HexToAddress("0x0000000000000000000000000000000000000000"),
+		genericHandlerContract: common.HexToAddress("0x0000000000000000000000000000000000000000"),
 		gasLimit:               big.NewInt(DefaultGasLimit),
 		maxGasPrice:            big.NewInt(DefaultGasPrice),
 		minGasPrice:            big.NewInt(DefaultMinGasPrice),

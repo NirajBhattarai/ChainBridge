@@ -14,11 +14,11 @@ import (
 	"github.com/ChainSafe/ChainBridge/connections/ethereum/egs"
 	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
 	"github.com/ChainSafe/log15"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/klaytn/klaytn/accounts/abi/bind"
 
 	//klaycommon "github.com/klaytn/klaytn/common"
 
-	klaycommon "github.com/ethereum/go-ethereum/common"
+	klaycommon "github.com/klaytn/klaytn/common"
 
 	klaycrypto "github.com/klaytn/klaytn/crypto"
 
@@ -89,7 +89,7 @@ func (c *Connection) Connect() error {
 	}
 	c.opts = opts
 	c.nonce = 0
-	c.callOpts = &bind.CallOpts{From: c.kp.CommonAddress()}
+	//c.callOpts = &bind.CallOpts{From: c.kp.CommonAddress()}
 	return nil
 }
 
@@ -233,7 +233,7 @@ func (c *Connection) LockAndUpdateOpts() error {
 	// 		return err
 	// 	}
 
-	// 	// Both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) cannot be specified: https://github.com/ethereum/go-ethereum/blob/95bbd46eabc5d95d9fb2108ec232dd62df2f44ab/accounts/abi/bind/base.go#L254
+	// 	// Both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) cannot be specified: https://github.com/klaytn/klaytn/blob/95bbd46eabc5d95d9fb2108ec232dd62df2f44ab/accounts/abi/bind/base.go#L254
 	// 	c.opts.GasPrice = nil
 	// } else {
 	// 	var gasPrice *big.Int

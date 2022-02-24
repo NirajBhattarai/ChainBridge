@@ -8,17 +8,17 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ChainSafe/ChainBridge/bindings/Bridge"
-	"github.com/ChainSafe/ChainBridge/bindings/ERC20Handler"
-	"github.com/ChainSafe/ChainBridge/bindings/ERC721Handler"
-	"github.com/ChainSafe/ChainBridge/bindings/GenericHandler"
+	"github.com/ChainSafe/ChainBridge/bindingsklay/Bridge"
+	"github.com/ChainSafe/ChainBridge/bindingsklay/ERC20Handler"
+	"github.com/ChainSafe/ChainBridge/bindingsklay/ERC721Handler"
+	"github.com/ChainSafe/ChainBridge/bindingsklay/GenericHandler"
 	"github.com/ChainSafe/ChainBridge/chains"
 	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/log15"
-	eth "github.com/ethereum/go-ethereum"
-	ethcommon "github.com/ethereum/go-ethereum/common"
+	eth "github.com/klaytn/klaytn"
+	ethcommon "github.com/klaytn/klaytn/common"
 )
 
 var BlockRetryInterval = time.Second * 5
@@ -205,8 +205,8 @@ func buildQuery(contract ethcommon.Address, sig utils.EventSig, startBlock *big.
 		FromBlock: startBlock,
 		ToBlock:   endBlock,
 		Addresses: []ethcommon.Address{contract},
-		Topics: [][]ethcommon.Hash{
-			{sig.GetTopic()},
+		Topics:    [][]ethcommon.Hash{
+			// {sig.GetTopic()},
 		},
 	}
 	return query

@@ -21,41 +21,14 @@ The writer recieves the message and creates a proposals on-chain. Once a proposa
 package klay
 
 import (
-
-	// "github.com/ChainSafe/chainbridge-utils/blockstore"
-	// "github.com/ChainSafe/chainbridge-utils/core"
-	// metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
-	// "github.com/ChainSafe/chainbridge-utils/msg"
-	// "github.com/ChainSafe/log15"
-	// "github.com/NirajBhattarai/klay-utils/crypto/secp256k1"
-	// "github.com/klaytn/klaytn/client"
-
-	// "github.com/klaytn/klaytn/accounts/abi/bind"
-
-	//"github.com/klaytn/klaytn/common"
-
-	// //c"github.com/ethereum/go-ethereum/common"
-
-	// "math/big"
-
-	// "github.com/ChainSafe/chainbridge-utils/blockstore"
-	// "github.com/ChainSafe/chainbridge-utils/core"
-	// "github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
-	// metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
-	// "github.com/ChainSafe/chainbridge-utils/msg"
-	// "github.com/ChainSafe/log15"
-	// "github.com/ethereum/go-ethereum/accounts/abi/bind"
-	// "github.com/ethereum/go-ethereum/ethclient"
-
-	// "github.com/ethereum/go-ethereum/common"
-	//"github.com/klaytn/klaytn/client"
-
 	"fmt"
 	"math/big"
 
-	"github.com/ChainSafe/ChainBridge/bindings/GenericHandler"
+	bridge "github.com/ChainSafe/ChainBridge/bindingsklay/Bridge"
+	erc20Handler "github.com/ChainSafe/ChainBridge/bindingsklay/ERC20Handler"
+	erc721Handler "github.com/ChainSafe/ChainBridge/bindingsklay/ERC721Handler"
+	"github.com/ChainSafe/ChainBridge/bindingsklay/GenericHandler"
 	connection "github.com/ChainSafe/ChainBridge/connections/klaytn"
-	utils "github.com/ChainSafe/ChainBridge/shared/ethereum"
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	"github.com/ChainSafe/chainbridge-utils/core"
 	"github.com/ChainSafe/chainbridge-utils/crypto/secp256k1"
@@ -63,12 +36,12 @@ import (
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/chainbridge-utils/msg"
 	"github.com/ChainSafe/log15"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/klaytn/klaytn/accounts/abi/bind"
+	"github.com/klaytn/klaytn/common"
 
-	//"github.com/ethereum/go-ethereum/ethclient"
+	//"github.com/klaytn/klaytn/contracts/bridge"
+
 	"github.com/klaytn/klaytn/client"
-	"github.com/klaytn/klaytn/contracts/bridge"
 )
 
 var _ core.Chain = &Chain{}
@@ -117,16 +90,13 @@ func setupBlockstore(cfg *Config, kp *secp256k1.Keypair) (*blockstore.Blockstore
 	}
 
 	return bs, nil
-	//return nil, nil
 }
 
 func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr chan<- error, m *metrics.ChainMetrics) (*Chain, error) {
-	fmt.Print("====================================================")
 	cfg, err := parseChainConfig(chainCfg)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print(cfg)
 
 	kpI, err := keystore.KeypairFromAddress(cfg.from, keystore.EthChain, cfg.keystorePath, chainCfg.Insecure)
 	if err != nil {
@@ -153,29 +123,30 @@ func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr cha
 		return nil, err
 	}
 
-	if cfg.erc20HandlerContract != utils.ZeroAddress {
-		err = conn.EnsureHasBytecode(cfg.erc20HandlerContract)
-		if err != nil {
-			return nil, err
-		}
+	// if cfg.erc20HandlerContract != utils.ZeroAddress {
+	err = conn.EnsureHasBytecode(cfg.erc20HandlerContract)
+	if err != nil {
+		return nil, err
 	}
+	//}
 
-	if cfg.genericHandlerContract != utils.ZeroAddress {
-		err = conn.EnsureHasBytecode(cfg.genericHandlerContract)
-		if err != nil {
-			return nil, err
-		}
+	//if cfg.genericHandlerContract != utils.ZeroAddress {
+	err = conn.EnsureHasBytecode(cfg.genericHandlerContract)
+	if err != nil {
+		return nil, err
 	}
+	//}
 
 	bridgeContract, err := bridge.NewBridge(cfg.bridgeContract, conn.Client())
 	if err != nil {
 		return nil, err
 	}
+	fmt.Print(bridgeContract)
 
-	chainId, err := bridgeContract.ChainID(conn.CallOpts())
-	if err != nil {
-		return nil, err
-	}
+	chainId := uint8(chainCfg.Id) //bridgeContract.ChainID(conn.CallOpts())
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if chainId != uint8(chainCfg.Id) {
 		return nil, fmt.Errorf("chainId (%d) and configuration chainId (%d) do not match", chainId, chainCfg.Id)
@@ -185,60 +156,63 @@ func InitializeChain(chainCfg *core.ChainConfig, logger log15.Logger, sysErr cha
 	if err != nil {
 		return nil, err
 	}
+	fmt.Print(erc20HandlerContract)
 
 	erc721HandlerContract, err := erc721Handler.NewERC721Handler(cfg.erc721HandlerContract, conn.Client())
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Print(erc721HandlerContract)
+
 	genericHandlerContract, err := GenericHandler.NewGenericHandler(cfg.genericHandlerContract, conn.Client())
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Print(genericHandlerContract)
 
 	if chainCfg.LatestBlock {
 		curr, err := conn.LatestBlock()
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("====================================")
 		fmt.Print(curr)
 		cfg.startBlock = curr
 	}
 
-	// listener := NewListener(conn, cfg, logger, bs, stop, sysErr, m)
-	// listener.setContracts(bridgeContract, erc20HandlerContract, erc721HandlerContract, genericHandlerContract)
+	listener := NewListener(conn, cfg, logger, bs, stop, sysErr, m)
+	listener.setContracts(bridgeContract, erc20HandlerContract, erc721HandlerContract, genericHandlerContract)
 
-	// writer := NewWriter(conn, cfg, logger, stop, sysErr, m)
-	// writer.setContract(bridgeContract)
+	writer := NewWriter(conn, cfg, logger, stop, sysErr, m)
+	writer.setContract(bridgeContract)
 
-	// return &Chain{
-	// 	cfg:      chainCfg,
-	// 	conn:     conn,
-	// 	writer:   writer,
-	// 	listener: listener,
-	// 	stop:     stop,
-	// }, nil
-	return nil, nil
+	return &Chain{
+		cfg:      chainCfg,
+		conn:     conn,
+		writer:   writer,
+		listener: listener,
+		stop:     stop,
+	}, nil
 }
 
 func (c *Chain) SetRouter(r *core.Router) {
-	// r.Listen(c.cfg.Id, c.writer)
-	// c.listener.setRouter(r)
+	r.Listen(c.cfg.Id, c.writer)
+	c.listener.setRouter(r)
 }
 
 func (c *Chain) Start() error {
-	// err := c.listener.start()
-	// if err != nil {
-	// 	return err
-	// }
+	err := c.listener.start()
+	if err != nil {
+		return err
+	}
 
-	// err = c.writer.start()
-	// if err != nil {
-	// 	return err
-	// }
+	err = c.writer.start()
+	if err != nil {
+		return err
+	}
 
-	// c.writer.log.Debug("Successfully started chain")
+	c.writer.log.Debug("Successfully started chain")
 	return nil
 }
 
