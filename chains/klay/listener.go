@@ -4,7 +4,9 @@
 package klay
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -17,7 +19,9 @@ import (
 	"github.com/ChainSafe/chainbridge-utils/blockstore"
 	metrics "github.com/ChainSafe/chainbridge-utils/metrics/types"
 	"github.com/ChainSafe/log15"
+	"github.com/NirajBhattarai/klay-utils/msg"
 	eth "github.com/klaytn/klaytn"
+	"github.com/klaytn/klaytn/accounts/abi/bind"
 	ethcommon "github.com/klaytn/klaytn/common"
 )
 
@@ -154,47 +158,51 @@ func (l *listener) pollBlocks() error {
 
 // getDepositEventsForBlock looks for the deposit event in the latest block
 func (l *listener) getDepositEventsForBlock(latestBlock *big.Int) error {
-	// l.log.Debug("Querying block for deposit events", "block", latestBlock)
-	// query := buildQuery(l.cfg.bridgeContract, utils.Deposit, latestBlock, latestBlock)
+	l.log.Debug("Querying block for deposit events", "block", latestBlock)
+	query := buildQuery(l.cfg.bridgeContract, utils.Deposit, latestBlock, latestBlock)
 
-	// // querying for logs
-	// logs, err := l.conn.Client().FilterLogs(context.Background(), query)
-	// if err != nil {
-	// 	return fmt.Errorf("unable to Filter Logs: %w", err)
-	// }
+	// querying for logs
+	logs, err := l.conn.Client().FilterLogs(context.Background(), query)
+	if err != nil {
+		return fmt.Errorf("unable to Filter Logs: %w", err)
+	}
 
-	// // read through the log events and handle their deposit event if handler is recognized
-	// for _, log := range logs {
-	// 	var m msg.Message
-	// 	destId := msg.ChainId(log.Topics[1].Big().Uint64())
-	// 	rId := msg.ResourceIdFromSlice(log.Topics[2].Bytes())
-	// 	nonce := msg.Nonce(log.Topics[3].Big().Uint64())
+	//Todo need to fix these listener
+	// read through the log events and handle their deposit event if handler is recognized
+	for _, log := range logs {
+		var m msg.Message
+		destId := msg.ChainId(log.Topics[1].Big().Uint64())
+		rId := msg.ResourceIdFromSlice(log.Topics[2].Bytes())
+		nonce := msg.Nonce(log.Topics[3].Big().Uint64())
 
-	// 	addr, err := l.bridgeContract.ResourceIDToHandlerAddress(&bind.CallOpts{From: l.conn.Keypair().CommonAddress()}, rId)
-	// 	if err != nil {
-	// 		return fmt.Errorf("failed to get handler from resource ID %x", rId)
-	// 	}
+		fmt.Print(destId)
+		fmt.Print(nonce)
+		fmt.Print(m)
+		addr, err := l.bridgeContract.ResourceIDToHandlerAddress(&bind.CallOpts{From: ethcommon.Address{}}, rId)
+		if err != nil {
+			return fmt.Errorf("failed to get handler from resource ID %x", rId)
+		}
 
-	// 	if addr == l.cfg.erc20HandlerContract {
-	// 		m, err = l.handleErc20DepositedEvent(destId, nonce)
-	// 	} else if addr == l.cfg.erc721HandlerContract {
-	// 		m, err = l.handleErc721DepositedEvent(destId, nonce)
-	// 	} else if addr == l.cfg.genericHandlerContract {
-	// 		m, err = l.handleGenericDepositedEvent(destId, nonce)
-	// 	} else {
-	// 		l.log.Error("event has unrecognized handler", "handler", addr.Hex())
-	// 		return nil
-	// 	}
+		if addr == l.cfg.erc20HandlerContract {
+			// m, err = l.handleErc20DepositedEvent(destId, nonce)
+		} else if addr == l.cfg.erc721HandlerContract {
+			// m, err = l.handleErc721DepositedEvent(destId, nonce)
+		} else if addr == l.cfg.genericHandlerContract {
+			// m, err = l.handleGenericDepositedEvent(destId, nonce)
+		} else {
+			l.log.Error("event has unrecognized handler", "handler", addr.Hex())
+			return nil
+		}
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	err = l.router.Send(m)
-	// 	if err != nil {
-	// 		l.log.Error("subscription error: failed to route message", "err", err)
-	// 	}
-	// }
+		//err = l.router.Send(m)
+		if err != nil {
+			l.log.Error("subscription error: failed to route message", "err", err)
+		}
+	}
 
 	return nil
 }
